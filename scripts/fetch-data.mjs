@@ -178,13 +178,13 @@ async function main() {
         throw new Error(`Weather data not available for ${prefKey}`);
       }
 
-      // 潮汐データ取得 (海しるAPIが使える場合はそちらを優先)
+      // 潮汐データ取得（海しるAPI v3 を試用キーで利用、失敗時は天文計算フォールバック）
       let tideData;
-      if (UMINARU_API_KEY && UMINARU_STATION_MAP[spotSlug]) {
+      const stationCode = UMINARU_STATION_MAP[spotSlug];
+      if (stationCode) {
         try {
-          const raw = await fetchUminaruTides(UMINARU_STATION_MAP[spotSlug], today, UMINARU_API_KEY);
-          tideData = parseUminaruResponse(raw, moonAge, tideType);
-          console.log(`  🌊 潮汐: ${spotSlug} (海しるAPI)`);
+          tideData = await fetchUminaruTides(stationCode, today, UMINARU_API_KEY || null);
+          console.log(`  🌊 潮汐: ${spotSlug} (海しるAPI v3 / 局${stationCode})`);
         } catch (err) {
           console.warn(`  ⚠️ 海しるAPI失敗、天文計算で代替: ${err.message}`);
           tideData = calcTides(spotSlug, today);
@@ -289,17 +289,6 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-function parseUminaruResponse(raw, moonAge, tideType) {
-  // 海しるAPIのレスポンス形式に合わせてパース (実装後に調整)
-  // 仮実装: 天文計算を返す
-  return {
-    type: tideType,
-    moonAge: Math.round(moonAge * 10) / 10,
-    highTide: raw.highTide ?? [],
-    lowTide:  raw.lowTide  ?? [],
-    calculatedBy: 'uminaru-api',
-  };
-}
 
 function getSpotName(slug) {
   const names = {

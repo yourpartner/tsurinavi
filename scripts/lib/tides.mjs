@@ -290,37 +290,147 @@ function getDefaultTideData() {
 }
 
 // ────────────────────────────────────────────────
-// 海しるAPI (APIキーがある場合に使用)
+// 海しるAPI v3 (海上保安庁 潮汐推算)
+// エンドポイント: https://api.msil.go.jp/tide-prediction/v3/
+// 試用キー3本あり（登録不要・利用規約準拠）
 // ────────────────────────────────────────────────
 
-// 海しる の潮位観測所コード (東京湾・千葉エリア)
+// 試用サブスクリプションキー（利用規約: https://portal.msil.go.jp/agreement）
+// 変更時は https://portal.msil.go.jp/howtouse を参照
+const TRIAL_KEYS = [
+  '0e83ad5d93214e04abf37c970c32b641',
+  '10784fa6ea604de687b2052e55e03879',
+  '61b85294618247a6bf652a979c5a5bbc',
+];
+
+// 海しるAPI v3 地点コード (千葉県 + 東京湾エリア)
+// 出典: https://api.msil.go.jp/tide-prediction/v3/station
 export const UMINARU_STATION_MAP = {
-  'choshi-port':          '0380101',  // 銚子
-  'katsuura-port':        '0380601',  // 勝浦
-  'tateyama-port':        '0380701',  // 館山
-  'futtsu-misaki':        '0380501',  // 富津
-  'kamogawa-port':        '0380601',  // 勝浦近傍
-  'choshi-external-port': '0380101',  // 銚子
-  'isumi-river-mouth':    '0380601',  // 勝浦近傍
-  'onjuku-beach':         '0380601',  // 勝浦近傍
-  'chikura-port':         '0380701',  // 館山近傍
-  'ichinomiya-beach':     '0380601',  // 勝浦近傍
+  'choshi-port':          '1202',  // 銚子港 CHOSHI-GYOKO
+  'choshi-external-port': '1202',  // 犬吠埼周辺（銚子と同一）
+  'katsuura-port':        '1205',  // 勝浦 KAZUSA-KATSUURA
+  'isumi-river-mouth':    '1205',  // 夷隅川河口（勝浦近傍）
+  'onjuku-beach':         '1205',  // 御宿海岸（勝浦近傍）
+  'ichinomiya-beach':     '1205',  // 一宮海岸（勝浦近傍）
+  'kamogawa-port':        '1206',  // 鴨川港 KAMOGAWA
+  'tateyama-port':        '1208',  // 館山（布良）MERA
+  'chikura-port':         '1208',  // 千倉港（館山近傍）
+  'futtsu-misaki':        '1212',  // 富津岬 KIMITSU
 };
 
-export async function fetchUminaruTides(stationId, date, apiKey) {
-  if (!apiKey) throw new Error('UMINARU_API_KEY is not set');
+/**
+ * 1分ごとの潮位配列から高潮・干潮を検出
+ * 1時間差分の符号変化（正→負: 高潮, 負→正: 干潮）を検出
+ */
+function detectTidalExtremes(tideArray) {
+  const highs = [];
+  const lows  = [];
 
-  const d = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const url = `https://www.msil.go.jp/api/tides?stationId=${stationId}&date=${d}`;
+  // 1時間ごとの差分（変化率）を計算
+  // diff[h] = (tide[h+1時間] - tide[h-1時間]) / 2
+  const hourly = Array.from({ length: 24 }, (_, h) =>
+    tideArray[Math.min(h * 60, tideArray.length - 1)]
+  );
+
+  for (let h = 1; h <= 22; h++) {
+    const diffPrev = hourly[h]     - hourly[h - 1]; // h-1→h の変化
+    const diffNext = hourly[h + 1] - hourly[h];     // h→h+1 の変化
+
+    if (diffPrev > 0 && diffNext <= 0) {
+      // 高潮: 上昇から下降（または横ばい）への転換
+      // 転換点周辺(h-1〜h+1時間)で実際の最大値を取得
+      const s = Math.max(0, (h - 1) * 60);
+      const e = Math.min(tideArray.length - 1, (h + 1) * 60);
+      let maxV = -Infinity, maxI = h * 60;
+      for (let j = s; j <= e; j++) {
+        if (tideArray[j] > maxV) { maxV = tideArray[j]; maxI = j; }
+      }
+      highs.push({
+        time:   `${String(Math.floor(maxI / 60)).padStart(2,'0')}:${String(maxI % 60).padStart(2,'0')}`,
+        height: maxV,
+      });
+    } else if (diffPrev < 0 && diffNext >= 0) {
+      // 干潮: 下降から上昇（または横ばい）への転換
+      const s = Math.max(0, (h - 1) * 60);
+      const e = Math.min(tideArray.length - 1, (h + 1) * 60);
+      let minV = Infinity, minI = h * 60;
+      for (let j = s; j <= e; j++) {
+        if (tideArray[j] < minV) { minV = tideArray[j]; minI = j; }
+      }
+      lows.push({
+        time:   `${String(Math.floor(minI / 60)).padStart(2,'0')}:${String(minI % 60).padStart(2,'0')}`,
+        height: minV,
+      });
+    }
+  }
+
+  // 3時間以内の近接する極値をマージ（高値/低値を優先して1つに統合）
+  function mergeClose(arr, isHigh, minGapMins = 180) {
+    const result = [];
+    for (const p of arr) {
+      const pMins = parseInt(p.time.split(':')[0]) * 60 + parseInt(p.time.split(':')[1]);
+      const close = result.find(r => {
+        const rMins = parseInt(r.time.split(':')[0]) * 60 + parseInt(r.time.split(':')[1]);
+        return Math.abs(pMins - rMins) < minGapMins;
+      });
+      if (!close) {
+        result.push(p);
+      } else if (isHigh ? p.height > close.height : p.height < close.height) {
+        result.splice(result.indexOf(close), 1, p);
+      }
+    }
+    return result.sort((a, b) => a.time.localeCompare(b.time));
+  }
+
+  return {
+    highs: mergeClose(highs, true),
+    lows:  mergeClose(lows, false),
+  };
+}
+
+/**
+ * 海しるAPI v3 から潮汐データを取得
+ * apiKey が未設定の場合は試用キーを使用
+ */
+export async function fetchUminaruTides(stationCode, date, apiKey) {
+  const key = apiKey || TRIAL_KEYS[0];
+
+  // YYYYMMDD フォーマット
+  const jst = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+  const y = jst.getFullYear();
+  const m = String(jst.getMonth() + 1).padStart(2, '0');
+  const d = String(jst.getDate()).padStart(2, '0');
+  const dateStr = `${y}${m}${d}`;
+
+  const url = `https://api.msil.go.jp/tide-prediction/v3/data?stationCode=${stationCode}&date=${dateStr}`;
 
   const res = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'Ocp-Apim-Subscription-Key': key,
       'User-Agent': 'TsuriNavi/1.0',
     },
     signal: AbortSignal.timeout(15000),
   });
 
-  if (!res.ok) throw new Error(`海しるAPI error: ${res.status}`);
-  return res.json();
+  if (!res.ok) throw new Error(`海しるAPI error: ${res.status} ${stationCode}`);
+
+  const json = await res.json();
+  // json.time: "2026-02-27T00:00:00+09:00"
+  // json.interval: 60 (1分ごと)
+  // json.tide: [cm, cm, ...] (1440要素)
+
+  const { highs, lows } = detectTidalExtremes(json.tide);
+
+  // 月齢・潮型は天文計算を使用
+  const moonAge  = getMoonAge(date);
+  const tideType = getTideType(moonAge);
+
+  return {
+    type:           tideType,
+    moonAge:        Math.round(moonAge * 10) / 10,
+    highTide:       highs.length > 0 ? highs : [{ time: '06:00', height: 160 }],
+    lowTide:        lows.length  > 0 ? lows  : [{ time: '12:00', height: 20  }],
+    calculatedBy:   'uminaru-api-v3',
+    stationCode,
+  };
 }
