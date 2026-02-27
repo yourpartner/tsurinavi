@@ -66,8 +66,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          cname: tsurinavi.jp  # カスタムドメイン取得後に有効になる
-          commit_message: 'deploy: auto build $(date +%Y-%m-%d)'
+          # cname: tsurinavi.jp  # カスタムドメイン取得後にコメントアウト解除
+          commit_message: 'deploy: auto build'
 
       # ⑦ 完了通知
       - name: Notify result
