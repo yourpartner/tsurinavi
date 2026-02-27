@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout
+  title="ページが見つかりません | TsuriNavi 釣りナビ"
+  description="お探しのページが見つかりませんでした。"
+  noindex={true}
+>
+  <Header slot="header" />
+  <main class="max-w-3xl mx-auto px-4 py-32 text-center">
+    <span class="text-8xl block mb-6">🎣</span>
+    <h1 class="text-4xl font-black text-gray-900 mb-4">ページが見つかりません</h1>
+    <p class="text-gray-500 mb-8">お探しのページは移動または削除された可能性があります。</p>
+    <div class="flex gap-4 justify-center">
+      <a href="/" class="px-6 py-3 bg-ocean-600 text-white font-bold rounded-xl hover:bg-ocean-700 transition-colors">
+        トップページへ
+      </a>
+      <a href="/area/chiba" class="px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors">
+        千葉県のスポット
+      </a>
+    </div>
+  </main>
+  <Footer slot="footer" />
+</BaseLayout>

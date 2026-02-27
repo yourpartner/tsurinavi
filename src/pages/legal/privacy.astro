@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<BaseLayout
+  title="プライバシーポリシー | TsuriNavi 釣りナビ"
+  description="TsuriNavi（釣りナビ）のプライバシーポリシーです。"
+  noindex={true}
+>
+  <Header slot="header" />
+  <main class="max-w-3xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">プライバシーポリシー</h1>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 prose prose-gray max-w-none text-sm">
+      <h2>1. 個人情報の収集について</h2>
+      <p>当サイト（TsuriNavi）は、お問い合わせフォームを通じてお名前・メールアドレス等の個人情報を収集する場合があります。収集した個人情報はお問い合わせへの回答にのみ使用し、第三者への提供は行いません。</p>
+
+      <h2>2. アクセス解析について</h2>
+      <p>当サイトでは、Google Analytics（または同等のアクセス解析ツール）を使用してサイトの利用状況を分析しています。このツールはCookieを使用しますが、個人を特定する情報は収集しません。Cookieの収集を希望しない場合は、ブラウザのCookie設定から無効にすることができます。</p>
+
+      <h2>3. アフィリエイトプログラムについて</h2>
+      <p>当サイトはAmazonアソシエイト・楽天アフィリエイトプログラムに参加しています。これらのプログラムでは、購入追跡のためにCookieが使用される場合があります。</p>
+
+      <h2>4. 広告について</h2>
+      <p>当サイトは将来的にGoogle AdSense等の広告サービスを導入する予定があります。広告の配信には行動ターゲティング広告が含まれる場合があります。</p>
+
+      <h2>5. プライバシーポリシーの変更</h2>
+      <p>当サイトのプライバシーポリシーは予告なく変更することがあります。変更後のポリシーはこのページに掲載します。</p>
+
+      <p class="text-gray-500 text-xs mt-8">最終更新：2026年2月</p>
+    </div>
+  </main>
+  <Footer slot="footer" />
+</BaseLayout>

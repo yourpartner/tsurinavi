@@ -1,0 +1,84 @@
+---
+export interface Props {
+  windSpeed?: number;
+  waveHeight?: number | null;
+  isNightFishing?: boolean;
+}
+
+const { windSpeed = 0, waveHeight = null, isNightFishing = false } = Astro.props;
+
+const showHighWind  = windSpeed  > 8;
+const showHighWave  = waveHeight != null && waveHeight > 1.5;
+---
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="bg-red-600 px-6 py-4">
+    <h2 class="text-white font-bold text-lg flex items-center gap-2">
+      <span>⚠️</span>
+      <span>安全・ルールについて</span>
+    </h2>
+  </div>
+
+  <div class="p-6 space-y-4">
+    <!-- Conditional warnings -->
+    {showHighWind && (
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p class="text-sm font-semibold text-red-800 flex items-center gap-2 mb-1">
+          <span>💨</span> 強風注意（{windSpeed}m/s）
+        </p>
+        <p class="text-sm text-red-700">
+          現在風速{windSpeed}m/sと強風です。仕掛けが大きく流れるほか、波が予測より高くなる場合があります。
+          防波堤・磯では波の打ち上げに十分注意し、危険と感じたら即座に釣りを中断してください。
+        </p>
+      </div>
+    )}
+
+    {showHighWave && (
+      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
+        <p class="text-sm font-semibold text-orange-800 flex items-center gap-2 mb-1">
+          <span>🌊</span> 高波注意（{waveHeight}m）
+        </p>
+        <p class="text-sm text-orange-700">
+          波高{waveHeight}mの予報が出ています。磯・外堤防では立入禁止になる場合があります。
+          現地の看板・立入禁止区域に必ず従ってください。
+        </p>
+      </div>
+    )}
+
+    {isNightFishing && (
+      <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+        <p class="text-sm font-semibold text-purple-800 flex items-center gap-2 mb-1">
+          <span>🌙</span> 夜釣りの注意
+        </p>
+        <p class="text-sm text-purple-700">
+          夜釣りの際は必ずヘッドライトを携帯し、足元の安全を確認しながら移動してください。
+          単独行動は避け、必ず複数人で釣行するか、家族への行先報告を徹底してください。
+        </p>
+      </div>
+    )}
+
+    <!-- Always-shown rules -->
+    <ul class="space-y-3">
+      <li class="flex items-start gap-3 text-sm text-gray-700">
+        <span class="text-lg flex-shrink-0">🦺</span>
+        <p><strong class="text-gray-900">ライフジャケットを必ず着用</strong>してください。堤防・磯・船上での釣りでは、転落リスクが常に存在します。桜マーク付きの自動膨張式ライフジャケット（腰巻き型）が便利です。</p>
+      </li>
+      <li class="flex items-start gap-3 text-sm text-gray-700">
+        <span class="text-lg flex-shrink-0">⚡</span>
+        <p><strong class="text-gray-900">雷雨時は即座に釣りを中止</strong>してください。長い釣り竿は落雷を引き寄せる危険があります。</p>
+      </li>
+      <li class="flex items-start gap-3 text-sm text-gray-700">
+        <span class="text-lg flex-shrink-0">🚫</span>
+        <p><strong class="text-gray-900">禁釣区域・立入禁止区域</strong>は現地の標識に必ず従ってください。標識が確認できない場合は釣りを控えてください。</p>
+      </li>
+      <li class="flex items-start gap-3 text-sm text-gray-700">
+        <span class="text-lg flex-shrink-0">🚮</span>
+        <p><strong class="text-gray-900">ゴミは必ず持ち帰り</strong>ましょう。釣り場環境を守ることで、将来にわたって釣りが楽しめます。</p>
+      </li>
+      <li class="flex items-start gap-3 text-sm text-gray-700">
+        <span class="text-lg flex-shrink-0">📏</span>
+        <p>採捕サイズ・禁漁期間は都道府県の漁業調整規則により定められています。<strong class="text-gray-900">遊漁規則を事前に確認</strong>してください。</p>
+      </li>
+    </ul>
+  </div>
+</div>

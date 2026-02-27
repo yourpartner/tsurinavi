@@ -1,0 +1,248 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SpotCard from '../components/SpotCard.astro';
+import { getTopSpots } from '../data/spots';
+import { prefectures, regions } from '../data/prefectures';
+import { fishList } from '../data/fish';
+
+const topSpots = getTopSpots(5);
+const today = new Date().toLocaleDateString('ja-JP', {
+  timeZone: 'Asia/Tokyo',
+  year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+});
+
+const coastalPrefs = prefectures.filter(p => p.spotCount > 0);
+const regionGroups = regions.map(r => ({
+  name: r,
+  prefs: coastalPrefs.filter(p => p.region === r),
+})).filter(g => g.prefs.length > 0);
+---
+
+<BaseLayout
+  title="TsuriNavi 釣りナビ — 潮汐・天気・AI釣果建議を統合した日本最大の釣り情報サービス"
+  description="今日どこで何が釣れる？潮汐・天気・水温・AIによる釣果アドバイスと装備おすすめを1ページに統合。千葉・神奈川・静岡など全国3,000スポット対応。"
+>
+  <Header slot="header" />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-b from-ocean-900 via-ocean-800 to-ocean-700 text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-10 left-10 text-9xl">🌊</div>
+      <div class="absolute top-20 right-20 text-8xl">🎣</div>
+      <div class="absolute bottom-10 left-1/3 text-7xl">🐟</div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 relative z-10">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 bg-ocean-600/50 backdrop-blur-sm border border-ocean-500/30 rounded-full px-4 py-1.5 text-sm text-ocean-200 mb-6">
+          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          毎朝4時に自動更新中 — {today}
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black leading-tight mb-4">
+          今日どこで<br/>
+          <span class="text-ocean-300">何が釣れる？</span>
+        </h1>
+        <p class="text-ocean-200 text-lg md:text-xl leading-relaxed mb-8">
+          潮汐・天気・水温・AIによる釣果アドバイスを1ページに統合。<br class="hidden md:block"/>
+          全国3,000以上の釣りスポットに対応した日本最大の釣りコンディション情報サービス。
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="/area/chiba"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-white text-ocean-800 font-bold rounded-xl hover:bg-ocean-50 transition-colors shadow-lg text-sm md:text-base"
+          >
+            🗾 千葉県のスポットを見る
+          </a>
+          <a
+            href="#prefectures"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-ocean-600/50 border border-ocean-400/50 text-white font-bold rounded-xl hover:bg-ocean-600 transition-colors text-sm md:text-base"
+          >
+            全国エリアから選ぶ →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature highlights -->
+  <section class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { icon: '🌊', label: '潮汐情報', desc: '満潮・干潮・潮型' },
+          { icon: '🌤️', label: '天気・風速', desc: '気象庁データ連携' },
+          { icon: '🤖', label: 'AI釣果建議', desc: '当日のおすすめ' },
+          { icon: '🎒', label: '装備リスト', desc: 'Amazon/楽天連携' },
+        ].map(f => (
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+            <span class="text-2xl">{f.icon}</span>
+            <div>
+              <p class="font-semibold text-gray-800 text-sm">{f.label}</p>
+              <p class="text-xs text-gray-500">{f.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 py-12 space-y-16">
+
+    <!-- Today's Top Spots -->
+    <section>
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-black text-gray-900">
+            🏆 今日のおすすめ釣りスポット TOP5
+          </h2>
+          <p class="text-gray-500 mt-1 text-sm">潮汐・天気・季節を総合評価した本日のスコア順</p>
+        </div>
+        <a href="/area/chiba" class="text-sm text-ocean-600 hover:underline hidden md:block">
+          千葉県の全スポット →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {topSpots.map((spot, i) => (
+          <SpotCard spot={spot} rank={i + 1} showScore={true} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Today's Pick Up (大潮 highlight) -->
+    <section class="bg-gradient-to-r from-blue-600 to-ocean-700 rounded-2xl p-8 text-white">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-full">✨ 今日のPick Up</span>
+            <span class="text-blue-200 text-sm">大潮 × 晴れ = 絶好のチャンス</span>
+          </div>
+          <h2 class="text-2xl font-black mb-2">大潮の今日はアジ・イワシの爆釣チャンス！</h2>
+          <p class="text-blue-100 leading-relaxed text-sm md:text-base">
+            本日は大潮で潮の動きが活発。千葉県の港では夜明け前後のマズメ時に
+            アジ・イワシの大群が接岸する可能性が高まっています。
+            サビキ仕掛けとアミエビを用意して早朝から出かけてみましょう。
+          </p>
+        </div>
+        <a
+          href="/spot/choshi-port"
+          class="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-white text-ocean-800 font-bold rounded-xl hover:bg-ocean-50 transition-colors whitespace-nowrap"
+        >
+          銚子港を見る →
+        </a>
+      </div>
+    </section>
+
+    <!-- Prefecture Selection -->
+    <section id="prefectures">
+      <div class="mb-6">
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900">🗾 都道府県から釣りスポットを探す</h2>
+        <p class="text-gray-500 mt-1 text-sm">全国{coastalPrefs.length}都道府県に対応</p>
+      </div>
+
+      <div class="space-y-6">
+        {regionGroups.map(group => (
+          <div>
+            <h3 class="text-sm font-bold text-gray-500 mb-3 flex items-center gap-2">
+              <span class="w-1 h-4 bg-ocean-600 rounded-full inline-block"></span>
+              {group.name}
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {group.prefs.map(pref => (
+                <a
+                  href={`/area/${pref.slug}`}
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 hover:border-ocean-400 hover:bg-ocean-50 rounded-xl text-sm font-medium text-gray-700 hover:text-ocean-700 transition-all"
+                >
+                  {pref.name}
+                  <span class="text-xs text-gray-400">{pref.spotCount}スポット</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Fish Guide -->
+    <section>
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-black text-gray-900">🐟 魚種ガイド</h2>
+          <p class="text-gray-500 mt-1 text-sm">狙いたい魚から釣り方・装備を調べる</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {fishList.map(fish => (
+          <a
+            href={`/fish/${fish.slug}`}
+            class="bg-white border border-gray-100 rounded-xl p-4 hover:border-ocean-300 hover:shadow-sm transition-all group"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-gray-900 group-hover:text-ocean-700 transition-colors">
+                {fish.name}
+              </span>
+              <span class={`text-xs px-2 py-0.5 rounded-full ${
+                fish.difficulty === 1 ? 'bg-green-50 text-green-700' :
+                fish.difficulty === 2 ? 'bg-yellow-50 text-yellow-700' :
+                'bg-red-50 text-red-700'
+              }`}>
+                {fish.difficulty === 1 ? '初級' : fish.difficulty === 2 ? '中級' : '上級'}
+              </span>
+            </div>
+            <p class="text-xs text-gray-500 leading-relaxed line-clamp-2">{fish.season}</p>
+            <div class="flex flex-wrap gap-1 mt-2">
+              {fish.methods.slice(0, 2).map(m => (
+                <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{m}</span>
+              ))}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Methods Intro -->
+    <section class="bg-ocean-50 rounded-2xl p-8">
+      <h2 class="text-2xl font-black text-gray-900 mb-2">🎣 釣り方入門ガイド</h2>
+      <p class="text-gray-600 mb-6">初めての釣りから上級テクニックまで、釣り方別に徹底解説します。</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { slug: 'sabiki',  label: 'サビキ釣り',  badge: '初心者OK', color: 'bg-green-100 text-green-800' },
+          { slug: 'nage-zuri', label: '投げ釣り',  badge: '初心者OK', color: 'bg-green-100 text-green-800' },
+          { slug: 'lure',    label: 'ルアー釣り',  badge: '中級〜',   color: 'bg-yellow-100 text-yellow-800' },
+          { slug: 'eging',   label: 'エギング',    badge: '中級〜',   color: 'bg-yellow-100 text-yellow-800' },
+          { slug: 'fukase',  label: 'フカセ釣り',  badge: '上級向け', color: 'bg-red-100 text-red-800' },
+          { slug: 'jigging', label: 'ジギング',    badge: '中級〜',   color: 'bg-yellow-100 text-yellow-800' },
+          { slug: 'ajing',   label: 'アジング',    badge: '中級〜',   color: 'bg-yellow-100 text-yellow-800' },
+          { slug: 'ukizuri', label: 'ウキ釣り',    badge: '初心者OK', color: 'bg-green-100 text-green-800' },
+        ].map(m => (
+          <a
+            href={`/method/${m.slug}`}
+            class="bg-white rounded-xl p-4 hover:shadow-sm hover:border-ocean-300 border border-transparent transition-all"
+          >
+            <p class="font-semibold text-gray-800 text-sm mb-1">{m.label}</p>
+            <span class={`text-xs px-2 py-0.5 rounded-full ${m.color}`}>{m.badge}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- SEO text -->
+    <section class="prose prose-gray max-w-none text-sm text-gray-600">
+      <h2 class="text-lg font-bold text-gray-800 mb-3">TsuriNavi（釣りナビ）について</h2>
+      <p>
+        TsuriNavi（釣りナビ）は、「今日どこで何が釣れるか」をワンストップで調べられる日本最大の釣りコンディション情報プラットフォームです。
+        海上保安庁の潮汐データ・気象庁の天気予報・水産研究機構の水温データをリアルタイムで統合し、
+        AIが各釣りスポットの当日コンディションを分析・日本語でわかりやすく解説します。
+      </p>
+      <p>
+        現在は千葉県の主要釣りスポットを中心に情報を提供しており、順次全国3,000スポット以上に拡張予定です。
+        アジのサビキ釣りから、クロダイのフカセ釣り、シーバスのルアーゲーム、アオリイカのエギングまで、
+        あらゆる釣りスタイルに対応した装備ガイド・釣り方解説も充実しています。
+      </p>
+    </section>
+  </main>
+
+  <Footer slot="footer" />
+</BaseLayout>

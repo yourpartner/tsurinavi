@@ -1,0 +1,270 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import TidePanel from '../../components/TidePanel.astro';
+import WeekForecast from '../../components/WeekForecast.astro';
+import AiAdvice from '../../components/AiAdvice.astro';
+import GearList from '../../components/GearList.astro';
+import SafetyNote from '../../components/SafetyNote.astro';
+import { spots, getSpotBySlug } from '../../data/spots';
+import { getSpotPageData }      from '../../lib/loadSpotData';
+import type { GearScene }        from '../../components/GearList.astro';
+
+export async function getStaticPaths() {
+  return spots.map(s => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const spot = getSpotBySlug(slug);
+if (!spot) return Astro.redirect('/');
+
+const { tide, weather, weekForecast, aiAdvice: advice, score: liveScore, dataSource, isLiveData } = getSpotPageData(spot);
+
+const typeLabel: Record<typeof spot.type, string> = {
+  port: '港・漁港', beach: '砂浜', rock: '磯', breakwater: '堤防', river: '河口・川',
+};
+
+const gearScenes: GearScene[] = [
+  {
+    name: 'サビキ釣り用',
+    icon: '🎣',
+    items: [
+      {
+        label: 'サビキ仕掛けセット（アジ・イワシ向け）',
+        spec: '4〜6号の小アジ用サビキが基本。コマセカゴはナス型60〜80号。竿は3〜4m堤防竿が使いやすい。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=サビキ仕掛けセット+アジ+おすすめ&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/サビキ仕掛けセット/',
+      },
+      {
+        label: 'アミエビ（コマセ）',
+        spec: '冷凍ブロック500〜1kgが1日分の目安。チューブ入りアミエビも手軽で人気。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=アミエビ+コマセ+冷凍+釣り&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/アミエビ+コマセ/',
+      },
+    ],
+  },
+  {
+    name: 'ルアー釣り用',
+    icon: '🎯',
+    items: [
+      {
+        label: 'シーバスロッド 9〜10ft（MLパワー）',
+        spec: '港湾部・河口向けのシーバスロッド。ダイワ・シマノの中価格帯（1〜2万円台）が性能と価格のバランスが良い。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=シーバスロッド+MLパワー+おすすめ&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/シーバスロッドML/',
+      },
+      {
+        label: 'ルアーセット（ミノー・バイブレーション）',
+        spec: '12〜14cmフローティングミノーとバイブレーションを各2〜3個ずつ揃えると幅広い状況に対応できる。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=シーバスルアーセット+ミノー+バイブレーション&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/シーバスルアーセット/',
+      },
+    ],
+  },
+  {
+    name: '投げ釣り用',
+    icon: '🏖️',
+    items: [
+      {
+        label: '投げ釣りセット（カレイ・キス向け）',
+        spec: '33号投げ竿＋大型スピニングリール＋テンビン仕掛けのセット。砂浜・堤防からカレイ・キスを狙う。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=投げ釣りセット+カレイ+キス+おすすめ&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/投げ釣りセット/',
+      },
+      {
+        label: 'アオイソメ（エサ）',
+        spec: 'カレイ・キス・イシモチ共通のエサ。釣具店で現地調達がベスト。50g〜100gが1回分の目安。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=アオイソメ+人工+釣り&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/アオイソメ+釣り/',
+      },
+    ],
+  },
+  {
+    name: '安全装備',
+    icon: '🦺',
+    items: [
+      {
+        label: 'ライフジャケット（桜マーク付き・自動膨張式）',
+        spec: '腰巻き型が動きやすくおすすめ。国土交通省型式承認（桜マーク）品を必ず選択。',
+        amazonLink: 'https://www.amazon.co.jp/s?k=ライフジャケット+釣り+桜マーク+自動膨張&tag=YOURTAG-22',
+        rakutenLink: 'https://search.rakuten.co.jp/search/mall/ライフジャケット+釣り+桜マーク/',
+      },
+    ],
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: spot.name,
+  description: spot.description,
+  address: {
+    '@type': 'PostalAddress',
+    addressRegion: spot.prefecture,
+    addressLocality: spot.area,
+    addressCountry: 'JP',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: spot.lat,
+    longitude: spot.lng,
+  },
+};
+---
+
+<BaseLayout
+  title={`${spot.name}の釣り情報 | 今日の潮汐・天気・AI釣果 | TsuriNavi`}
+  description={`${spot.name}（${spot.area}）の今日の潮汐・天気・風速・AIによる釣行アドバイス。${spot.topFish.join('・')}などが狙えます。7日間の釣り予報も掲載。`}
+  type="article"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+  <Header slot="header" />
+
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6 flex-wrap">
+      <a href="/" class="hover:text-ocean-600">トップ</a>
+      <span>›</span>
+      <a href={`/area/${spot.prefectureSlug}`} class="hover:text-ocean-600">{spot.prefecture}</a>
+      <span>›</span>
+      <span class="text-gray-800 font-medium">{spot.name}</span>
+    </nav>
+
+    <!-- Spot Header -->
+    <div class="bg-gradient-to-r from-ocean-800 to-ocean-600 rounded-2xl p-8 text-white mb-8">
+      <div class="flex flex-col md:flex-row items-start justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="bg-white/20 text-white text-xs font-medium px-2.5 py-1 rounded-full">{typeLabel[spot.type]}</span>
+            <span class="bg-white/20 text-white text-xs font-medium px-2.5 py-1 rounded-full">{spot.area}</span>
+            {spot.parking && <span class="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">🅿️ 駐車場</span>}
+            {spot.toilet  && <span class="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">🚻 トイレ</span>}
+          </div>
+          <h1 class="text-3xl md:text-4xl font-black mb-2">{spot.name}</h1>
+          <p class="text-ocean-200 leading-relaxed max-w-2xl">{spot.description}</p>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center min-w-[100px]">
+            <p class="text-ocean-200 text-xs mb-1">今日のスコア</p>
+            <p class="text-4xl font-black">{liveScore}</p>
+            <p class="text-xs text-ocean-300">/ 100</p>
+          </div>
+          <div class="flex flex-wrap gap-1.5 justify-end">
+            {spot.topFish.map(fish => (
+              <span class="bg-white/10 border border-white/20 text-white text-xs px-2.5 py-1 rounded-full">{fish}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- ① Today's Data Panel -->
+        <TidePanel tide={tide} weather={weather} spotName={spot.name} />
+
+        <!-- ③ AI Advice -->
+        <AiAdvice advice={advice} />
+
+        <!-- ② 7-day Forecast -->
+        <WeekForecast forecast={weekForecast} />
+
+        <!-- ④ Gear List -->
+        <GearList scenes={gearScenes} />
+
+        <!-- ⑤ Safety -->
+        <SafetyNote
+          windSpeed={weather.windSpeed}
+          waveHeight={weather.waveHeight}
+          isNightFishing={false}
+        />
+
+        <!-- ⑥ Data Source -->
+        <div class={`text-xs bg-white rounded-xl border p-4 ${isLiveData ? 'border-green-200' : 'border-yellow-200'}`}>
+          <div class="flex items-center gap-2 mb-2">
+            <span class={`w-2 h-2 rounded-full ${isLiveData ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+            <p class="font-medium text-gray-600">
+              {isLiveData ? 'リアルタイムデータ使用中' : 'サンプルデータ（API接続前）'}
+            </p>
+          </div>
+          <ul class="space-y-1 text-gray-400">
+            <li>• 天気・風速：{dataSource}</li>
+            <li>• 潮汐：{tide.calculatedBy === 'astronomy' ? '天文計算（海しるAPI設定後により精確に）' : '海しるAPI（海上保安庁）'}</li>
+            <li>• 波高：気象庁 波浪予報（6時間毎）</li>
+            <li>• 水温：水産研究機構 ブイデータ（取得できない場合は非表示）</li>
+          </ul>
+          <p class="mt-2 text-gray-400">最終更新: {advice.updatedAt}</p>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+        <!-- Access -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span>📍</span> アクセス
+          </h3>
+          <p class="text-sm text-gray-600 leading-relaxed mb-4">{spot.access}</p>
+          <a
+            href={`https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 w-full justify-center px-4 py-2.5 bg-ocean-600 text-white text-sm font-medium rounded-xl hover:bg-ocean-700 transition-colors"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Google マップで見る
+          </a>
+        </div>
+
+        <!-- Fishing Methods -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span>🎣</span> 主な釣り方
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            {spot.methods.map(method => (
+              <span class="bg-ocean-50 text-ocean-700 text-sm px-3 py-1.5 rounded-full border border-ocean-100">
+                {method}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <!-- Nearby Spots -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span>🗺️</span> {spot.prefecture}の他のスポット
+          </h3>
+          <a
+            href={`/area/${spot.prefectureSlug}`}
+            class="inline-flex items-center gap-2 text-ocean-600 text-sm font-medium hover:underline"
+          >
+            {spot.prefecture}全スポット一覧 →
+          </a>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="bg-ocean-50 rounded-2xl p-6">
+          <h3 class="font-bold text-gray-800 mb-3 text-sm">関連する釣り情報</h3>
+          <ul class="space-y-2">
+            {spot.topFish.slice(0, 3).map(fish => (
+              <li>
+                <a
+                  href={`/fish/${fish === 'アジ' ? 'aji' : fish === 'シーバス（スズキ）' || fish === 'シーバス' ? 'seabass' : fish === 'クロダイ' ? 'kurodai' : fish === 'ヒラメ' ? 'hirame' : 'aji'}`}
+                  class="text-sm text-ocean-700 hover:underline flex items-center gap-1.5"
+                >
+                  <span>→</span>
+                  {fish}の釣り方・仕掛けガイド
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <Footer slot="footer" />
+</BaseLayout>

@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<BaseLayout
+  title="アフィリエイト・広告表示 | TsuriNavi 釣りナビ"
+  description="TsuriNavi（釣りナビ）のアフィリエイトプログラム参加および広告掲載に関する表示です。"
+  noindex={true}
+>
+  <Header slot="header" />
+  <main class="max-w-3xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">アフィリエイト・広告表示</h1>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6 text-sm text-gray-700 leading-relaxed">
+      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
+        <h2 class="font-bold text-yellow-800 mb-2">Amazonアソシエイトについて</h2>
+        <p>
+          TsuriNavi（釣りナビ）はAmazon.co.jpを宣伝しリンクすることによってサイトが紹介料を獲得できる手段を提供することを目的に設定されたアフィリエイトプログラムである、
+          Amazonアソシエイト・プログラムの参加者です。
+        </p>
+      </div>
+
+      <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+        <h2 class="font-bold text-red-800 mb-2">楽天アフィリエイトについて</h2>
+        <p>
+          当サイトは楽天アフィリエイトプログラムに参加しています。掲載している楽天市場のリンクから商品をご購入いただいた場合、
+          当サイトに紹介料が支払われます。
+        </p>
+      </div>
+
+      <div>
+        <h2 class="font-bold text-gray-900 mb-2">透明性について</h2>
+        <p>
+          アフィリエイトリンクには「Amazon」「楽天市場」等のラベルを明示し、一般テキストリンクと区別しています。
+          アフィリエイト収益はコンテンツの独立性・公正性に影響を与えておらず、掲載商品は当サイト独自の基準で選定しています。
+        </p>
+      </div>
+    </div>
+  </main>
+  <Footer slot="footer" />
+</BaseLayout>

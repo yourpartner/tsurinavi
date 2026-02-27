@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import SpotCard from '../../components/SpotCard.astro';
+import { prefectures, getPrefectureBySlug } from '../../data/prefectures';
+import { getSpotsByPrefecture } from '../../data/spots';
+
+export async function getStaticPaths() {
+  return prefectures.map(p => ({ params: { prefecture: p.slug } }));
+}
+
+const { prefecture: slug } = Astro.params;
+const pref = getPrefectureBySlug(slug);
+if (!pref) return Astro.redirect('/');
+
+const spots = getSpotsByPrefecture(slug);
+const today = new Date().toLocaleDateString('ja-JP', {
+  timeZone: 'Asia/Tokyo',
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+---
+
+<BaseLayout
+  title={`${pref.name}の釣りスポット一覧 | 潮汐・天気・AI釣果情報`}
+  description={`${pref.name}の釣りスポット${pref.spotCount}か所の潮汐・天気・今日の釣果情報。${pref.topFish.slice(0,3).join('・')}など多彩な魚種が狙えます。`}
+>
+  <Header slot="header" />
+
+  <main class="max-w-7xl mx-auto px-4 py-10">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+      <a href="/" class="hover:text-ocean-600 transition-colors">トップ</a>
+      <span>›</span>
+      <span class="text-gray-800 font-medium">{pref.name}の釣りスポット</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-ocean-800 to-ocean-600 rounded-2xl p-8 text-white mb-10">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-white/20 text-white text-xs font-medium px-2.5 py-1 rounded-full">{pref.region}</span>
+            <span class="text-ocean-200 text-sm">{today} 更新</span>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-black mb-2">
+            {pref.name}の釣りスポット
+          </h1>
+          <p class="text-ocean-200">
+            {pref.spotCount > 0 ? `${pref.spotCount}か所のスポット情報` : '準備中'}
+            {pref.topFish.length > 0 && ` ／ ${pref.topFish.join('・')} が狙えます`}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {pref.topFish.slice(0,5).map(fish => (
+            <span class="bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm px-3 py-1.5 rounded-full">
+              {fish}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {spots.length > 0 ? (
+      <div class="space-y-8">
+        <!-- Score guide -->
+        <div class="flex items-center gap-4 text-xs text-gray-500 bg-white border border-gray-100 rounded-xl px-4 py-3">
+          <span class="font-medium text-gray-700">今日の釣りスコア：</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>80以上=好条件</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span>60〜79=まずまず</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>60未満=不向き</span>
+        </div>
+
+        <!-- Spot Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {spots.map(spot => (
+            <SpotCard spot={spot} showScore={true} />
+          ))}
+        </div>
+
+        <!-- Area Info -->
+        <div class="bg-ocean-50 rounded-2xl p-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">
+            {pref.name}の釣り情報
+          </h2>
+          <p class="text-gray-600 leading-relaxed">
+            {pref.name}は{pref.region}地方に位置し、{pref.topFish.length > 0 ? `${pref.topFish.join('・')}` : '様々な魚種'}が狙える人気の釣りエリアです。
+            TsuriNavi（釣りナビ）では、{pref.name}の主要釣りスポット{pref.spotCount}か所について、
+            毎日最新の潮汐データ・天気予報・AIによる釣果アドバイスを更新しています。
+            サビキ釣りやルアー釣りなど、様々なスタイルで楽しめるスポット情報をご活用ください。
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div class="text-center py-20 bg-white rounded-2xl border border-gray-100">
+        <span class="text-6xl block mb-4">🚧</span>
+        <h2 class="text-xl font-bold text-gray-800 mb-2">準備中です</h2>
+        <p class="text-gray-500 mb-6">
+          {pref.name}の釣りスポット情報は現在準備中です。<br/>
+          まずは千葉県のスポットをご覧ください。
+        </p>
+        <a
+          href="/area/chiba"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-ocean-600 text-white font-bold rounded-xl hover:bg-ocean-700 transition-colors"
+        >
+          千葉県のスポットを見る →
+        </a>
+      </div>
+    )}
+  </main>
+
+  <Footer slot="footer" />
+</BaseLayout>

@@ -1,0 +1,81 @@
+---
+import type { FishingSpot } from '../data/spots';
+
+export interface Props {
+  spot: FishingSpot;
+  rank?: number;
+  showScore?: boolean;
+}
+
+const { spot, rank, showScore = false } = Astro.props;
+
+const typeLabel: Record<FishingSpot['type'], string> = {
+  port: '港・漁港',
+  beach: '砂浜',
+  rock: '磯',
+  breakwater: '堤防',
+  river: '河口・川',
+};
+
+const diffLabel = ['', '初心者向け', '中級者向け', '上級者向け'];
+const diffColor = ['', 'text-green-600 bg-green-50', 'text-yellow-600 bg-yellow-50', 'text-red-600 bg-red-50'];
+
+const scoreColor =
+  spot.score >= 85 ? 'bg-green-500' :
+  spot.score >= 70 ? 'bg-yellow-500' : 'bg-gray-400';
+---
+
+<a href={`/spot/${spot.slug}`} class="block group">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-ocean-200 transition-all duration-200">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          {rank && (
+            <span class={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+              rank === 1 ? 'bg-yellow-400 text-yellow-900' :
+              rank === 2 ? 'bg-gray-300 text-gray-700' :
+              rank === 3 ? 'bg-orange-400 text-orange-900' :
+              'bg-ocean-100 text-ocean-700'
+            }`}>{rank}</span>
+          )}
+          <span class="text-xs text-ocean-600 font-medium">{spot.area}</span>
+          <span class="text-xs text-gray-400">{typeLabel[spot.type]}</span>
+        </div>
+        <h3 class="font-bold text-gray-900 text-lg leading-tight group-hover:text-ocean-700 transition-colors truncate">
+          {spot.name}
+        </h3>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          {spot.topFish.slice(0, 4).map(fish => (
+            <span class="text-xs bg-ocean-50 text-ocean-700 px-2 py-0.5 rounded-full border border-ocean-100">
+              {fish}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div class="flex-shrink-0 text-right">
+        {showScore && (
+          <div class="mb-2">
+            <div class={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-white text-sm font-bold ${scoreColor}`}>
+              <span>今日</span>
+              <span class="text-lg leading-none">{spot.score}</span>
+            </div>
+          </div>
+        )}
+        <span class={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${diffColor[spot.difficulty]}`}>
+          {diffLabel[spot.difficulty]}
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+      <div class="flex items-center gap-3 text-xs text-gray-500">
+        {spot.parking && <span class="flex items-center gap-1">🅿️ 駐車場あり</span>}
+        {spot.toilet  && <span class="flex items-center gap-1">🚻 トイレあり</span>}
+      </div>
+      <span class="text-xs text-ocean-600 font-medium group-hover:underline">
+        詳細・今日の条件 →
+      </span>
+    </div>
+  </div>
+</a>

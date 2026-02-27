@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<BaseLayout
+  title="運営者情報 | TsuriNavi 釣りナビ"
+  description="TsuriNavi（釣りナビ）の運営者情報です。"
+  noindex={true}
+>
+  <Header slot="header" />
+  <main class="max-w-3xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">運営者情報</h1>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
+      <dl class="divide-y divide-gray-100">
+        {[
+          ['サイト名',     'TsuriNavi（釣りナビ）'],
+          ['サイトURL',    'https://tsurinavi.jp'],
+          ['運営目的',     '日本全国の釣りコンディション情報（潮汐・天気・釣果アドバイス）の提供および関連商品のアフィリエイト紹介'],
+          ['お問い合わせ', 'contact@tsurinavi.jp'],
+        ].map(([k, v]) => (
+          <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt class="text-sm font-semibold text-gray-600">{k}</dt>
+            <dd class="mt-1 sm:mt-0 sm:col-span-2 text-sm text-gray-800">{v}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div class="pt-4">
+        <h2 class="text-lg font-bold text-gray-900 mb-3">収益化について</h2>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          当サイトはAmazonアソシエイト・楽天アフィリエイトプログラムに参加しており、
+          掲載しているリンクから商品をご購入いただいた場合に紹介手数料が発生します。
+          これによりサイトの維持・コンテンツ制作費用を賄っています。
+          アフィリエイト収益はコンテンツの中立性・品質に影響を与えません。
+        </p>
+      </div>
+    </div>
+  </main>
+  <Footer slot="footer" />
+</BaseLayout>

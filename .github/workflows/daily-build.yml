@@ -1,0 +1,94 @@
+name: Daily Build & Deploy
+
+on:
+  # 毎日 AM 4:30 JST = UTC 19:30 (前日)
+  schedule:
+    - cron: '30 19 * * *'
+
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      skip_fetch:
+        description: 'データ取得をスキップしてビルドのみ実行'
+        required: false
+        default: 'false'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ① リポジトリ取得
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ② Node.js セットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # ③ 依存パッケージインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # ④ データ取得 (気象庁API + 潮汐計算)
+      - name: Fetch live data
+        if: ${{ github.event.inputs.skip_fetch != 'true' }}
+        env:
+          UMINARU_API_KEY: ${{ secrets.UMINARU_API_KEY }}
+        run: |
+          echo "🎣 データ取得開始: $(date '+%Y-%m-%d %H:%M:%S JST' --date='+9 hours')"
+          node scripts/fetch-data.mjs
+          echo "✅ データ取得完了"
+
+      # データ取得結果の確認
+      - name: Check generated data
+        run: |
+          if [ -f src/data/live/_summary.json ]; then
+            echo "📊 取得サマリー:"
+            cat src/data/live/_summary.json
+          fi
+          echo "📁 生成ファイル一覧:"
+          ls -la src/data/live/ 2>/dev/null || echo "(ファイルなし)"
+
+      # ⑤ Astro ビルド
+      - name: Build Astro site
+        run: |
+          echo "🔨 ビルド開始"
+          npm run build
+          echo "✅ ビルド完了"
+          echo "📁 出力ファイル数: $(find dist -type f | wc -l)"
+
+      # ⑥ Cloudflare Pages へデプロイ
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken:    ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:   ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: tsurinavi
+          directory:   dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      # ⑦ デプロイ成功通知 (エラー時も実行)
+      - name: Notify result
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          DATE="$(date '+%Y/%m/%d %H:%M' --date='+9 hours')"
+          if [ "$STATUS" = "success" ]; then
+            echo "✅ デプロイ成功: $DATE"
+          else
+            echo "❌ デプロイ失敗: $DATE (status: $STATUS)"
+          fi
+          # Telegram通知（シークレット設定後に有効化）
+          # if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+          #   curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          #     -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+          #     -d "text=TsuriNavi: $STATUS ($DATE)"
+          # fi

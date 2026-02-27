@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<BaseLayout
+  title="免責事項 | TsuriNavi 釣りナビ"
+  description="TsuriNavi（釣りナビ）の免責事項です。"
+  noindex={true}
+>
+  <Header slot="header" />
+  <main class="max-w-3xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-black text-gray-900 mb-8">免責事項</h1>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 prose prose-gray max-w-none text-sm">
+      <h2>情報の正確性について</h2>
+      <p>当サイトに掲載する潮汐・天気・水温・AIによる釣果アドバイスは、各種公開データソース（海上保安庁・気象庁等）に基づく参考情報です。実際の釣果・安全性を保証するものではありません。</p>
+
+      <h2>釣行の自己責任について</h2>
+      <p>釣行にあたっての判断は、最終的に釣行者ご自身の責任において行ってください。当サイトの情報を参考にした釣行で生じたいかなる損害・事故についても、当サイト運営者は一切の責任を負いません。</p>
+
+      <h2>安全について</h2>
+      <p>海・川での釣りには常に危険が伴います。ライフジャケットの着用、気象情報の確認、立入禁止区域の遵守を必ず実施してください。天候の急変時は直ちに釣りを中止し安全な場所に避難してください。</p>
+
+      <h2>リンク先について</h2>
+      <p>当サイトからリンクするAmazon・楽天市場等の外部サイトのコンテンツについて、当サイトは責任を負いません。商品の購入は各サービスの利用規約に従ってください。</p>
+
+      <h2>禁漁・規制について</h2>
+      <p>魚種・地域によって禁漁期間・採捕サイズ・釣り禁止区域が設定されています。各都道府県の漁業調整規則および現地の標識に必ず従ってください。</p>
+
+      <p class="text-gray-500 text-xs mt-8">最終更新：2026年2月</p>
+    </div>
+  </main>
+  <Footer slot="footer" />
+</BaseLayout>
