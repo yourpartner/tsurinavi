@@ -23,6 +23,18 @@ function scoreClass(score: number): string {
   return 'bg-red-400';
 }
 
+function scoreBgClass(score: number): string {
+  if (score >= 80) return 'bg-green-50 border-green-200';
+  if (score >= 60) return 'bg-yellow-50 border-yellow-200';
+  return 'bg-red-50 border-red-200';
+}
+
+function scoreTextClass(score: number): string {
+  if (score >= 80) return 'text-green-700';
+  if (score >= 60) return 'text-yellow-700';
+  return 'text-red-600';
+}
+
 const tideColor: Record<string, string> = {
   '大潮': 'text-blue-700 font-bold',
   '中潮': 'text-blue-500',
@@ -33,12 +45,61 @@ const tideColor: Record<string, string> = {
 ---
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-  <div class="px-6 py-4 border-b border-gray-100">
+  <div class="px-4 md:px-6 py-4 border-b border-gray-100">
     <h2 class="font-bold text-gray-900 text-lg">7日間の釣り予報</h2>
     <p class="text-sm text-gray-500 mt-0.5">潮汐・天気・釣りスコアの予測</p>
   </div>
 
-  <div class="overflow-x-auto">
+  <!-- ===== モバイル用カードレイアウト (〜md) ===== -->
+  <div class="md:hidden divide-y divide-gray-50">
+    {forecast.map((day, i) => (
+      <div class={`px-4 py-3 ${i === 0 ? 'bg-ocean-50' : ''}`}>
+        <div class="flex items-center justify-between gap-3">
+          <!-- 左: 日付・潮型 -->
+          <div class="flex items-center gap-2 min-w-0">
+            {i === 0 && (
+              <span class="flex-shrink-0 text-xs bg-ocean-600 text-white px-1.5 py-0.5 rounded font-medium">今日</span>
+            )}
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-medium text-sm text-gray-800">{day.date}</span>
+                <span class={`text-xs ${day.dayOfWeek === '土' ? 'text-blue-600' : day.dayOfWeek === '日' ? 'text-red-500' : 'text-gray-400'}`}>
+                  ({day.dayOfWeek})
+                </span>
+              </div>
+              <span class={`text-xs ${tideColor[day.tideType] ?? 'text-gray-600'}`}>{day.tideType}</span>
+            </div>
+          </div>
+
+          <!-- 中: 天気・風・降水 -->
+          <div class="flex items-center gap-3 text-xs text-gray-600">
+            <span class="text-xl" title={day.weather}>{weatherIcon[day.weather] ?? '🌡️'}</span>
+            <div class="text-center">
+              <p class={`font-medium ${day.windSpeed > 8 ? 'text-red-600' : day.windSpeed > 5 ? 'text-yellow-600' : 'text-gray-700'}`}>
+                {day.windSpeed}m/s
+              </p>
+              <p class="text-gray-400">風速</p>
+            </div>
+            <div class="text-center">
+              <p class={`font-medium ${day.precipitation >= 50 ? 'text-blue-600' : 'text-gray-700'}`}>
+                {day.precipitation}%
+              </p>
+              <p class="text-gray-400">降水</p>
+            </div>
+          </div>
+
+          <!-- 右: スコア -->
+          <div class={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${scoreBgClass(day.score)}`}>
+            <div class={`w-2 h-2 rounded-full flex-shrink-0 ${scoreClass(day.score)}`}></div>
+            <span class={`text-base font-black ${scoreTextClass(day.score)}`}>{day.score}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- ===== デスクトップ用テーブルレイアウト (md〜) ===== -->
+  <div class="hidden md:block overflow-x-auto">
     <table class="w-full">
       <thead>
         <tr class="bg-gray-50 text-xs text-gray-500 border-b border-gray-100">
@@ -94,7 +155,7 @@ const tideColor: Record<string, string> = {
     </table>
   </div>
 
-  <div class="px-6 py-3 bg-gray-50 text-xs text-gray-400 flex items-center gap-4">
+  <div class="px-4 md:px-6 py-3 bg-gray-50 text-xs text-gray-400 flex items-center gap-4 flex-wrap">
     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>80以上：好条件</span>
     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span>60〜79：まずまず</span>
     <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span>60未満：不向き</span>

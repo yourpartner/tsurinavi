@@ -37,9 +37,9 @@ const today = new Date().toLocaleDateString('ja-JP', {
     </div>
   </div>
 
-  <div class="p-6">
+  <div class="p-4 md:p-6">
     <!-- Tide Times Grid -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
       <div class="bg-blue-50 rounded-xl p-4">
         <p class="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-1">
           <span>🔼</span> 満潮
@@ -65,7 +65,7 @@ const today = new Date().toLocaleDateString('ja-JP', {
     </div>
 
     <!-- Weather Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
       <div class="bg-gray-50 rounded-xl p-3 text-center">
         <p class="text-xs text-gray-500 mb-1">天気</p>
         <p class="font-bold text-gray-800 text-sm leading-tight">{weather.condition}</p>

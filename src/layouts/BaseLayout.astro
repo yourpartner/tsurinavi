@@ -47,8 +47,14 @@ const fullTitle = title.includes('TsuriNavi') ? title : `${title} | TsuriNavi �
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={`${siteUrl}${ogImage}`} />
 
-    <!-- Favicon -->
+    <!-- Favicon & PWA -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#075985" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="釣りナビ" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
 
     <!-- Google Fonts: Noto Sans JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -74,7 +80,7 @@ const fullTitle = title.includes('TsuriNavi') ? title : `${title} | TsuriNavi �
       }
     </script>
   </head>
-  <body class="bg-gray-50 text-gray-800 font-sans antialiased">
+  <body class="bg-gray-50 text-gray-800 font-sans antialiased scroll-smooth">
     <slot name="header">
       <!-- default header injected by components -->
     </slot>

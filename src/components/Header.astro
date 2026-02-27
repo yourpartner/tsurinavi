@@ -1,9 +1,9 @@
 ---
 const navItems = [
-  { label: '釣りスポット',  href: '/area/chiba' },
-  { label: '魚種ガイド',    href: '/fish/aji' },
-  { label: '釣り方入門',    href: '/method/sabiki' },
-  { label: '装備ガイド',    href: '/gear/sabiki-set' },
+  { label: '釣りスポット',  href: '/area/chiba',       icon: '📍' },
+  { label: '魚種ガイド',    href: '/fish/aji',          icon: '🐟' },
+  { label: '釣り方入門',    href: '/method/sabiki',     icon: '🎣' },
+  { label: '装備ガイド',    href: '/gear/sabiki-set',   icon: '🎒' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -11,12 +11,13 @@ const currentPath = Astro.url.pathname;
 
 <header class="bg-ocean-800 text-white shadow-lg sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4">
-    <div class="flex items-center justify-between h-16">
+    <div class="flex items-center justify-between h-14 md:h-16">
+
       <!-- Logo -->
-      <a href="/" class="flex items-center gap-2 group">
+      <a href="/" class="flex items-center gap-2 group flex-shrink-0">
         <span class="text-2xl">🎣</span>
         <div class="leading-tight">
-          <span class="block text-xl font-black tracking-tight group-hover:text-ocean-200 transition-colors">TsuriNavi</span>
+          <span class="block text-lg md:text-xl font-black tracking-tight group-hover:text-ocean-200 transition-colors">TsuriNavi</span>
           <span class="block text-xs text-ocean-300 -mt-0.5">釣りナビ</span>
         </div>
       </a>
@@ -37,46 +38,132 @@ const currentPath = Astro.url.pathname;
         ))}
       </nav>
 
-      <!-- Today Badge -->
+      <!-- Desktop Badge -->
       <div class="hidden md:flex items-center gap-2">
         <div class="bg-ocean-900 rounded-lg px-3 py-1.5 text-xs">
-          <span class="text-ocean-400">本日の条件</span>
-          <span class="ml-2 text-yellow-400 font-bold">大潮 ✨</span>
+          <span class="text-ocean-400">リアルタイム更新中</span>
+          <span class="ml-2 text-green-400 font-bold">● LIVE</span>
         </div>
       </div>
 
-      <!-- Mobile Hamburger -->
+      <!-- Mobile: Hamburger -->
       <button
         id="mobile-menu-btn"
-        class="md:hidden p-2 rounded-lg hover:bg-ocean-700 transition-colors"
+        class="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-lg hover:bg-ocean-700 transition-colors gap-1.5"
         aria-label="メニューを開く"
+        aria-expanded="false"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
+        <span id="ham-line1" class="w-5 h-0.5 bg-white rounded-full transition-all duration-300 origin-center"></span>
+        <span id="ham-line2" class="w-5 h-0.5 bg-white rounded-full transition-all duration-300"></span>
+        <span id="ham-line3" class="w-5 h-0.5 bg-white rounded-full transition-all duration-300 origin-center"></span>
       </button>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="hidden md:hidden pb-4">
-      <nav class="flex flex-col gap-1">
-        {navItems.map(item => (
-          <a
-            href={item.href}
-            class="px-3 py-2.5 rounded-lg text-sm font-medium text-ocean-100 hover:bg-ocean-700 hover:text-white transition-colors"
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
     </div>
   </div>
 </header>
 
+<!-- Mobile Drawer Overlay -->
+<div
+  id="mobile-overlay"
+  class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"
+  aria-hidden="true"
+></div>
+
+<!-- Mobile Drawer -->
+<div
+  id="mobile-drawer"
+  class="fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-ocean-900 z-50 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col shadow-2xl"
+  aria-hidden="true"
+>
+  <!-- Drawer Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-ocean-700">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🎣</span>
+      <span class="text-white font-black">TsuriNavi</span>
+    </div>
+    <button
+      id="mobile-close-btn"
+      class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-ocean-700 transition-colors text-ocean-300 hover:text-white"
+      aria-label="メニューを閉じる"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Drawer Nav -->
+  <nav class="flex flex-col p-4 gap-1 flex-1 overflow-y-auto">
+    {navItems.map(item => (
+      <a
+        href={item.href}
+        class={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-colors ${
+          currentPath.startsWith(item.href.split('/').slice(0, 2).join('/'))
+            ? 'bg-ocean-700 text-white'
+            : 'text-ocean-200 hover:bg-ocean-800 hover:text-white'
+        }`}
+      >
+        <span class="text-lg w-7 text-center flex-shrink-0">{item.icon}</span>
+        <span>{item.label}</span>
+      </a>
+    ))}
+
+    <div class="border-t border-ocean-700 my-3"></div>
+
+    <a href="/legal/operator"   class="flex items-center gap-3 px-4 py-3 text-xs text-ocean-400 hover:text-ocean-200 transition-colors rounded-xl hover:bg-ocean-800">運営者情報</a>
+    <a href="/legal/privacy"    class="flex items-center gap-3 px-4 py-3 text-xs text-ocean-400 hover:text-ocean-200 transition-colors rounded-xl hover:bg-ocean-800">プライバシーポリシー</a>
+    <a href="/legal/disclaimer" class="flex items-center gap-3 px-4 py-3 text-xs text-ocean-400 hover:text-ocean-200 transition-colors rounded-xl hover:bg-ocean-800">免責事項</a>
+  </nav>
+
+  <!-- Drawer Footer -->
+  <div class="px-5 py-4 border-t border-ocean-700">
+    <p class="text-xs text-ocean-500 text-center">毎朝4時に自動更新中</p>
+    <div class="flex items-center justify-center gap-1 mt-1">
+      <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+      <span class="text-xs text-green-400 font-medium">リアルタイムデータ連携中</span>
+    </div>
+  </div>
+</div>
+
 <script>
-  const btn = document.getElementById('mobile-menu-btn');
-  const menu = document.getElementById('mobile-menu');
-  btn?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden');
+  const btn      = document.getElementById('mobile-menu-btn');
+  const closeBtn = document.getElementById('mobile-close-btn');
+  const drawer   = document.getElementById('mobile-drawer');
+  const overlay  = document.getElementById('mobile-overlay');
+  const line1    = document.getElementById('ham-line1');
+  const line2    = document.getElementById('ham-line2');
+  const line3    = document.getElementById('ham-line3');
+
+  let isOpen = false;
+
+  function openMenu() {
+    isOpen = true;
+    drawer?.classList.remove('translate-x-full');
+    overlay?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    btn?.setAttribute('aria-expanded', 'true');
+    // X アニメーション
+    line1?.classList.add('rotate-45', 'translate-y-2');
+    line2?.classList.add('opacity-0', 'scale-x-0');
+    line3?.classList.add('-rotate-45', '-translate-y-2');
+  }
+
+  function closeMenu() {
+    isOpen = false;
+    drawer?.classList.add('translate-x-full');
+    overlay?.classList.add('hidden');
+    document.body.style.overflow = '';
+    btn?.setAttribute('aria-expanded', 'false');
+    line1?.classList.remove('rotate-45', 'translate-y-2');
+    line2?.classList.remove('opacity-0', 'scale-x-0');
+    line3?.classList.remove('-rotate-45', '-translate-y-2');
+  }
+
+  btn?.addEventListener('click', () => isOpen ? closeMenu() : openMenu());
+  closeBtn?.addEventListener('click', closeMenu);
+  overlay?.addEventListener('click', closeMenu);
+
+  // ESCキーで閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOpen) closeMenu();
   });
 </script>
